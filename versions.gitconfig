@@ -1,2 +1,4 @@
 [loop "v2.2.4"]
 	b57 = 50020e4a
+[loop "v$(LOOP_MARKETING_VERSION)"]
+	b1 = 50020e4a
