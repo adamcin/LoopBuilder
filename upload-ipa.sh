@@ -27,7 +27,7 @@ sed -i.bak \
 	's/\(rsync .* "\${plugin_as_framework_path}"\)$/\1 \&\& "${SRCROOT}\/Scripts\/remove-sim-archs.sh" "${plugin_as_framework_path}"/' \
 	"${loopdir}/Scripts/copy-plugins.sh"
 
-app_version="$(plutil -extract CFBundleShortVersionString xml1 -o - "${loopdir}/Loop/Info.plist" | xmllint --xpath "//string/text()" -)"
+app_version="$(sed -n 's/LOOP_MARKETING_VERSION = //p' "${loopdir}/Loop.xcconfig")"
 
 current_project_version=0
 if git config -f versions.gitconfig --get-regexp "loop.v${app_version}.b" >>/dev/null; then
