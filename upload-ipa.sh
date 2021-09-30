@@ -2,14 +2,18 @@
 # https://rderik.com/blog/automating-build-and-testflight-upload-for-simple-ios-apps/#automating-the-build-version-increase
 set -eo pipefail
 readonly basedir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly loopdir="$(cd "${basedir}/../Loop" && pwd)"
+readonly loopdir="$(cd "${basedir}/../LoopWorkspace/Loop" && pwd)"
 
 commit="true"
+branch="remotes/origin/HEAD"
 
 while [[ "$#" -gt 0 ]]; do
     opt="$1"
     shift
     case "$opt" in
+    -b|--branch)
+    branch="$1"
+    shift;;
     --no-commit)
     commit="false";;
     *)
@@ -20,12 +24,13 @@ done
 
 pushd "${basedir}"
 
-git -C "${loopdir}" fetch
-git -C "${loopdir}" switch -fC adamcin/current remotes/origin/HEAD
-cp -f "${basedir}/remove-sim-archs.sh" "${loopdir}/Scripts/remove-sim-archs.sh"
-sed -i.bak \
-	's/\(rsync .* "\${plugin_as_framework_path}"\)$/\1 \&\& "${SRCROOT}\/Scripts\/remove-sim-archs.sh" "${plugin_as_framework_path}"/' \
-	"${loopdir}/Scripts/copy-plugins.sh"
+#git -C "${loopdir}" fetch
+#git -C "${loopdir}" switch -fC adamcin/current "${branch}"
+#git -C "${loopdir}" clean -fdx
+#cp -f "${basedir}/remove-sim-archs.sh" "${loopdir}/Scripts/remove-sim-archs.sh"
+#sed -i.bak \
+#	's/\(rsync .* "\${plugin_as_framework_path}"\)$/\1 \&\& "${SRCROOT}\/Scripts\/remove-sim-archs.sh" "${plugin_as_framework_path}"/' \
+#	"${loopdir}/Scripts/copy-plugins.sh"
 
 app_version="$(sed -n 's/LOOP_MARKETING_VERSION = //p' "${loopdir}/Loop.xcconfig")"
 
@@ -41,7 +46,7 @@ sed -i.bak \
 	-e "s/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = X4L3JSUC6J;/" \
 	"${loopdir}/Loop.xcodeproj/project.pbxproj"
 
-xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -project "${loopdir}/Loop.xcodeproj" -xcconfig "${loopdir}/Loop.xcconfig" -scheme Loop -configuration Release archive -archivePath "$(pwd)/build/Loop.xcarchive"
+xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -workspace "${loopdir}/../Loop.xcworkspace" -xcconfig "${loopdir}/../LoopConfigOverride.xcconfig" -scheme 'Loop (Workspace)' -configuration Release archive -archivePath "$(pwd)/build/Loop.xcarchive" -destination 'generic/platform=iOS'
 
 xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -exportArchive -archivePath "$(pwd)/build/Loop.xcarchive" -exportOptionsPlist exportOptions.plist -exportPath "$(pwd)/build"
 
