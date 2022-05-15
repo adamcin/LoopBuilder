@@ -32,7 +32,7 @@ pushd "${basedir}"
 #	's/\(rsync .* "\${plugin_as_framework_path}"\)$/\1 \&\& "${SRCROOT}\/Scripts\/remove-sim-archs.sh" "${plugin_as_framework_path}"/' \
 #	"${loopdir}/Scripts/copy-plugins.sh"
 
-app_version="$(sed -n 's/LOOP_MARKETING_VERSION = //p' "${loopdir}/Loop.xcconfig")"
+app_version="$(sed -n 's/LOOP_MARKETING_VERSION = //p' "${loopdir}/Version.xcconfig")"
 
 current_project_version=0
 if git config -f versions.gitconfig --get-regexp "loop.v${app_version}.b" >>/dev/null; then
@@ -41,10 +41,8 @@ fi
 
 new_project_version=$((current_project_version + 1))
 
-sed -i.bak \
-	-e "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = ${new_project_version};/" \
-	-e "s/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = X4L3JSUC6J;/" \
-	"${loopdir}/Loop.xcodeproj/project.pbxproj"
+sed -e '/^\s#/d' -e "s/CURRENT_PROJECT_VERSION = [^;]*\$/CURRENT_PROJECT_VERSION = ${new_project_version}/" \
+	"${loopdir}/Version.xcconfig" > "${loopdir}/VersionOverride.xcconfig"
 
 xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -workspace "${loopdir}/../Loop.xcworkspace" -xcconfig "${loopdir}/../LoopConfigOverride.xcconfig" -scheme 'Loop (Workspace)' -configuration Release archive -archivePath "$(pwd)/build/Loop.xcarchive" -destination 'generic/platform=iOS'
 
