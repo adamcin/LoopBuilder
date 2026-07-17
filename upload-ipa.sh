@@ -2,7 +2,8 @@
 # https://rderik.com/blog/automating-build-and-testflight-upload-for-simple-ios-apps/#automating-the-build-version-increase
 set -eo pipefail
 readonly basedir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly loopdir="$(cd "${basedir}/../LoopWorkspace/Loop" && pwd)"
+readonly workspacedir="$(cd "${basedir}/../LoopWorkspace" && pwd)"
+readonly loopdir="${workspacedir}/Loop"
 
 commit="true"
 branch="remotes/origin/HEAD"
@@ -32,7 +33,7 @@ pushd "${basedir}"
 #	's/\(rsync .* "\${plugin_as_framework_path}"\)$/\1 \&\& "${SRCROOT}\/Scripts\/remove-sim-archs.sh" "${plugin_as_framework_path}"/' \
 #	"${loopdir}/Scripts/copy-plugins.sh"
 
-app_version="$(sed -n 's/LOOP_MARKETING_VERSION = //p' "${loopdir}/Version.xcconfig")"
+app_version="$(sed -n 's/LOOP_MARKETING_VERSION = //p' "${workspacedir}/VersionOverride.xcconfig")"
 
 current_project_version=0
 if git config -f versions.gitconfig --get-regexp "loop.v${app_version}.b" >>/dev/null; then
@@ -41,9 +42,9 @@ fi
 
 new_project_version=$((current_project_version + 1))
 
-echo "CURRENT_PROJECT_VERSION = ${new_project_version}" > "${loopdir}/VersionOverride.xcconfig"
+sed -e "/^CURRENT_PROJECT_VERSION /d" "${workspacedir}/VersionOverride.xcconfig" && echo "CURRENT_PROJECT_VERSION = ${new_project_version}/" >> "${workspacedir}/VersionOverride.xcconfig"
 
-xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -workspace "${loopdir}/../LoopWorkspace.xcworkspace" -xcconfig "${loopdir}/../LoopConfigOverride.xcconfig" -scheme 'LoopWorkspace' -configuration Release archive -archivePath "$(pwd)/build/Loop.xcarchive" -destination 'generic/platform=iOS'
+xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -workspace "${workspacedir}/LoopWorkspace.xcworkspace" -xcconfig "${workspacedir}/LoopConfigOverride.xcconfig" -scheme 'LoopWorkspace' -configuration Release archive -archivePath "$(pwd)/build/Loop.xcarchive" -destination 'generic/platform=iOS'
 
 xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -exportArchive -archivePath "$(pwd)/build/Loop.xcarchive" -exportOptionsPlist exportOptions.plist -exportPath "$(pwd)/build"
 
