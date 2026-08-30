@@ -42,7 +42,7 @@ fi
 
 new_project_version=$((current_project_version + 1))
 
-sed -e "/^CURRENT_PROJECT_VERSION /d" "${workspacedir}/VersionOverride.xcconfig" && echo "CURRENT_PROJECT_VERSION = ${new_project_version}/" >> "${workspacedir}/VersionOverride.xcconfig"
+sed -e "/^CURRENT_PROJECT_VERSION /d" -i.moved-aside "${workspacedir}/VersionOverride.xcconfig" && echo "CURRENT_PROJECT_VERSION = ${new_project_version}/" >> "${workspacedir}/VersionOverride.xcconfig"
 
 xcodebuild -allowProvisioningUpdates -allowProvisioningDeviceRegistration -workspace "${workspacedir}/LoopWorkspace.xcworkspace" -xcconfig "${workspacedir}/LoopConfigOverride.xcconfig" -scheme 'LoopWorkspace' -configuration Release archive -archivePath "$(pwd)/build/Loop.xcarchive" -destination 'generic/platform=iOS'
 
